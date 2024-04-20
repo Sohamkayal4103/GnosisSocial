@@ -5,7 +5,10 @@ import RegisterUser from "./pages/RegisterUser/RegisterUser";
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import Navbar from "./components/Navbar/Navbar";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+
 import "./App.css";
+
+import { EthersExtension } from "@dynamic-labs/ethers-v5";
 
 const evmNetworks = [
   {
@@ -34,6 +37,7 @@ function App() {
       settings={{
         environmentId: "93021a16-f70d-49ff-b5c4-e0b4ad6bff7e",
         walletConnectors: [EthereumWalletConnectors],
+        walletConnectorExtensions: [EthersExtension],
         overrides: { evmNetworks },
       }}
     >
