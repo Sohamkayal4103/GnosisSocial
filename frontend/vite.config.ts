@@ -1,31 +1,21 @@
 import { defineConfig } from "vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import react from "@vitejs/plugin-react";
+import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
 export default defineConfig({
-  plugins: [
-    nodePolyfills({
-      // To add only specific polyfills, add them here. If no option is passed, adds all polyfills
-      include: ["path"],
-      // To exclude specific polyfills, add them to this list. Note: if include is provided, this has no effect
-      exclude: [
-        "http", // Excludes the polyfill for `http` and `node:http`.
+  optimizeDeps: {
+    esbuildOptions: {
+      // Enable esbuild polyfill plugins
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          process: true,
+        }),
+        NodeModulesPolyfillPlugin(),
       ],
-      // Whether to polyfill specific globals.
-      globals: {
-        Buffer: true, // can also be 'build', 'dev', or false
-        global: true,
-        process: true,
-      },
-      // Override the default polyfills for specific modules.
-      overrides: {
-        // Since `fs` is not supported in browsers, we can use the `memfs` package to polyfill it.
-        fs: "memfs",
-      },
-      // Whether to polyfill `node:` protocol imports.
-      protocolImports: true,
-    }),
-  ],
+    },
+  },
+  plugins: [react()],
   server: {
     port: 3000,
   },
