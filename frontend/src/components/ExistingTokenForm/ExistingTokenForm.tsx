@@ -311,7 +311,7 @@ export default function ExistingTokenForm() {
   const [daovisibility, setdaoVisibility] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { primaryWallet } = useDynamicContext();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const mintDAONFT = async () => {
     if (!primaryWallet?.connector) {
