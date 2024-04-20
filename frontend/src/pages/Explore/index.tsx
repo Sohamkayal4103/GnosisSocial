@@ -64,13 +64,14 @@ const Explore = () => {
       duration: 2000,
       isClosable: true,
     });
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    console.log("signer is available");
+
+    const provider = new ethers.providers.JsonRpcProvider(
+      "https://rpc.chiadochain.net"
+    );
     const userSideInstance = new ethers.Contract(
       import.meta.env.VITE_USERSIDE_ADDRESS,
       usersideabi,
-      signer
+      provider
     );
     const tempTotalDaos = Number(await userSideInstance.totalDaos());
 
@@ -91,7 +92,7 @@ const Explore = () => {
       const governanceTokenInstance = new ethers.Contract(
         tempTokenAddress,
         governancetokenabi,
-        signer
+        provider
       );
       console.log(governanceTokenInstance);
       tempTokenName = await governanceTokenInstance.name();
@@ -120,9 +121,8 @@ const Explore = () => {
 
   useEffect(() => {
     //onLoad();
-    setTimeout(() => {
-      onLoad();
-    }, [6000]);
+
+    onLoad();
   }, []);
 
   return (

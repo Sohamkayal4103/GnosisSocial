@@ -155,10 +155,12 @@ const DaosCard = ({
         const daoIdNum = Number(daoId);
         navigate(`/dao/${daoIdNum}`);
       } catch (e) {
-        console.log(e);
+        console.log(e.data === undefined);
+
         toast({
-          title: e.message,
-          description: e.data.message,
+          title: e.data === undefined ? "Error" : e.message,
+          description:
+            e.data === undefined ? "Not enough tokens" : e.data.message,
           status: "error",
           duration: 5000,
           isClosable: true,
