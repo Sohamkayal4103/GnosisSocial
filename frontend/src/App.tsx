@@ -4,6 +4,8 @@ import Home from "./pages/Home/Home";
 import CreateDAO from "./pages/CreateDAO/CreateDAO";
 import RegisterUser from "./pages/RegisterUser/RegisterUser";
 import Explore from "./pages/Explore";
+import DAOAdmin from "./pages/DAOAdmin/DAOAdmin";
+import InviteCode from "./pages/InviteCode/InviteCode";
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import Navbar from "./components/Navbar/Navbar";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
@@ -50,6 +52,8 @@ function App() {
           <Route path="/create-dao" element={<CreateDAO />} />
           <Route path="/register" element={<RegisterUser />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/dao/admin/:id" element={<DAOAdmin />} />
+          <Route path="/invitecode" element={<InviteCode />} />
         </Routes>
       </Router>
     </DynamicContextProvider>
