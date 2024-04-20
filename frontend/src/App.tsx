@@ -4,12 +4,9 @@ import Home from "./pages/Home/Home";
 import CreateDAO from "./pages/CreateDAO/CreateDAO";
 import RegisterUser from "./pages/RegisterUser/RegisterUser";
 import Explore from "./pages/Explore";
-<<<<<<< HEAD
 import DAOAdmin from "./pages/DAOAdmin/DAOAdmin";
 import InviteCode from "./pages/InviteCode/InviteCode";
-=======
 import Profile from "./pages/Profile/Profile";
->>>>>>> main
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import Navbar from "./components/Navbar/Navbar";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
