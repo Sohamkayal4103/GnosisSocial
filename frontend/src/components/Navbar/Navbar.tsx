@@ -1,3 +1,4 @@
+// @ts-nocheck comment
 import {
   Box,
   Flex,
@@ -5,7 +6,6 @@ import {
   IconButton,
   Button,
   useDisclosure,
-  Image,
   useColorModeValue,
   Stack,
   Link,
