@@ -286,12 +286,46 @@ const IndividualDAO = () => {
 
   const authorizeContract = async () => {
     const signer = await primaryWallet.connector.ethers?.getSigner();
+
+    const signer_pimlico = walletClientToSmartAccountSigner(walletClient);
+
+    const paymasterClient = createPimlicoPaymasterClient({
+      transport: http(import.meta.env.VITE_BUNDLER_URL),
+      entryPoint: ENTRYPOINT_ADDRESS_V06,
+    });
+
+    console.log(paymasterClient);
+
+    const publicClient = createPublicClient({
+      transport: http("https://rpc.chiadochain.net"),
+    });
+
+    const simpleSmartAccountClient = await signerToSimpleSmartAccount(
+      publicClient,
+      {
+        entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+        signer: signer_pimlico,
+        factoryAddress: "0x9406Cc6185a346906296840746125a0E44976454",
+      }
+    );
+
+    console.log(simpleSmartAccountClient);
+
+    const smartAccountClient = createSmartAccountClient({
+      account: simpleSmartAccountClient,
+      chain: gnosisChiado, // or whatever chain you are using
+      bundlerTransport: http(import.meta.env.VITE_BUNDLER_URL),
+      entryPoint: ENTRYPOINT_ADDRESS_V06,
+      middleware: {
+        sponsorUserOperation: paymasterClient.sponsorUserOperation,
+      },
+    });
+
     const userSideInstance = new ethers.Contract(
       import.meta.env.VITE_USERSIDE_ADDRESS,
       usersideabi,
       signer
     );
-    console.log(userSideInstance);
 
     const propInfo = await userSideInstance.proposalIdtoProposal(
       proposalForVote
@@ -305,33 +339,58 @@ const IndividualDAO = () => {
     );
     const tokenSymbol = await govTokenContract.symbol();
     console.log(tokenSymbol);
-    const tx = await govTokenContract.approve(
-      import.meta.env.VITE_USERSIDE_ADDRESS,
-      minThreshold
+
+    const data = await govTokenContract.interface.encodeFunctionData(
+      "approve",
+      [import.meta.env.VITE_USERSIDE_ADDRESS, minThreshold]
     );
-    await tx.wait();
-    toast({
-      title: "Congrats! Transaction Complete",
-      description: `Your vote will be counted soon.`,
-      status: "success",
-      duration: 5000,
-      isClosable: true,
-      position: "top-right",
+
+    const txHash = await smartAccountClient.sendTransaction({
+      to: import.meta.env.VITE_CREATEGOVERNANCE_ADDRESS,
+      data: data,
+      value: 0,
+      maxFeePerGas: 12710000001,
+      maxPriorityFeePerGas: 12709999993,
     });
-    const tx2 = await userSideInstance.voteForProposal(
-      proposalForVote,
-      userResponse,
-      signer._address
-    );
-    await tx2.wait();
-    toast({
-      title: "Congrats.",
-      description: `Your vote has been counted.`,
-      status: "success",
-      duration: 10000,
-      isClosable: true,
-      position: "top-right",
-    });
+
+    console.log("Approve token hash" + txHash);
+
+    if (txHash !== undefined) {
+      toast({
+        title: "Congrats! Transaction Complete",
+        description: `Your vote will be counted soon.`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "top-right",
+      });
+
+      const data2 = await userSideInstance.interface.encodeFunctionData(
+        "voteForProposal",
+        [proposalForVote, userResponse, signer._address]
+      );
+
+      const txhash2 = await smartAccountClient.sendTransaction({
+        to: import.meta.env.VITE_USERSIDE_ADDRESS,
+        data: data2,
+        value: 0,
+        maxFeePerGas: 12710000001,
+        maxPriorityFeePerGas: 12709999993,
+      });
+
+      console.log("Vote hash" + txhash2);
+
+      if (txhash2 !== undefined) {
+        toast({
+          title: "Congrats.",
+          description: `Your vote has been counted.`,
+          status: "success",
+          duration: 10000,
+          isClosable: true,
+          position: "top-right",
+        });
+      }
+    }
   };
 
   useEffect(() => {
