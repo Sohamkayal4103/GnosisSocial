@@ -20,6 +20,7 @@ import {
   Divider,
 } from "@chakra-ui/react";
 import usersideabi from "../../../utils/abis/usersideabi.json";
+import airdropabi from "../../../utils/abis/airdropabi.json";
 import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import { TokenboundClient } from "@tokenbound/sdk";
@@ -38,8 +39,9 @@ const DAOAdmin = () => {
   const { primaryWallet } = useDynamicContext();
   const [leafH, setLeafH] = useState("");
   const [mintH, setMintH] = useState("");
-
-  const [nftAdd, setNftAdd] = useState("");
+  const [nftAdd, setnftAdd] = useState("");
+  const [nftName, setnftName] = useState("");
+  const [nftSym, setnftSym] = useState("");
   const params = useParams();
 
   const generateProof = async () => {
@@ -165,6 +167,22 @@ const DAOAdmin = () => {
     });
     const data = await response.json();
     console.log(data);
+
+    const contract = new ethers.Contract(
+      import.meta.env.VITE_AIRDROP_ADDRESS,
+      airdropabi,
+      signer
+    );
+
+    const tx = await contract.deployNFT(nftName, nftSym);
+
+    await tx.wait(1);
+
+    const addr = await contract.deployedAdd();
+
+    setnftAdd(addr);
+
+    console.log(tx);
   };
 
   useEffect(() => {
@@ -245,11 +263,20 @@ const DAOAdmin = () => {
         </Heading>
         <Input
           onChange={(e) => {
-            setNftAdd(e.target.value);
+            setnftName(e.target.value);
           }}
-          value={nftAdd}
           type="text"
-          placeholder="0x..."
+          placeholder="Enter a cool name for NFT.."
+          mr={2}
+          w="320px"
+        />
+
+        <Input
+          onChange={(e) => {
+            setnftSym(e.target.value);
+          }}
+          type="text"
+          placeholder="Enter a symbol for NFT"
           mr={2}
           w="320px"
         />
@@ -264,6 +291,7 @@ const DAOAdmin = () => {
           color="white"
           boxShadow="outline"
         >
+          <Text> Deployed NFT Address: {nftAdd}</Text>
           <Text>Access Code: {accCode}</Text>
           <Text>Dao Id: {params.id}</Text>
           <Text>
