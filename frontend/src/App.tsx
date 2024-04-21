@@ -8,6 +8,7 @@ import IndividualDAO from "./pages/IndividualDAO/IndividualDAO";
 import DAOAdmin from "./pages/DAOAdmin/DAOAdmin";
 import InviteCode from "./pages/InviteCode/InviteCode";
 import Profile from "./pages/Profile/Profile";
+import Claim from "./pages/Claim/Claim";
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
@@ -84,6 +85,7 @@ function App() {
                   <Route path="/dao/admin/:id" element={<DAOAdmin />} />
                   <Route path="/invitecode" element={<InviteCode />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/claim" element={<Claim />} />
                 </Routes>
                 <Footer />
               </Router>
