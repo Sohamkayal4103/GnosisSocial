@@ -7,6 +7,17 @@ import { ethers } from "ethers";
 import usersideabi from "../../../utils/abis/usersideabi.json";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import {
+  createSmartAccountClient,
+  walletClientToSmartAccountSigner,
+  ENTRYPOINT_ADDRESS_V06,
+  getRequiredPrefund,
+} from "permissionless";
+import { gnosisChiado } from "@wagmi/core/chains";
+import { useWalletClient } from "wagmi";
+import { signerToSimpleSmartAccount } from "permissionless/accounts";
+import { Hex, createPublicClient, http } from "viem";
+import { createPimlicoPaymasterClient } from "permissionless/clients/pimlico";
+import {
   SimpleGrid,
   FormHelperText,
   Modal,
@@ -97,6 +108,8 @@ const IndividualDAO = () => {
   const [ipfsUrl, setIpfsUrl] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const inputRef = useRef(null);
+
+  const { data: walletClient } = useWalletClient();
 
   const changeHandler = () => {
     setProfileImage(inputRef.current?.files[0]);
@@ -401,11 +414,80 @@ const IndividualDAO = () => {
 
   const addProposal = async () => {
     const signer = await primaryWallet.connector.ethers?.getSigner();
+
+    const signer_pimlico = walletClientToSmartAccountSigner(walletClient);
+
+    const paymasterClient = createPimlicoPaymasterClient({
+      transport: http(import.meta.env.VITE_BUNDLER_URL),
+      entryPoint: ENTRYPOINT_ADDRESS_V06,
+    });
+
+    console.log(paymasterClient);
+
+    const publicClient = createPublicClient({
+      transport: http("https://rpc.chiadochain.net"),
+    });
+
+    const simpleSmartAccountClient = await signerToSimpleSmartAccount(
+      publicClient,
+      {
+        entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+        signer: signer_pimlico,
+        factoryAddress: "0x9406Cc6185a346906296840746125a0E44976454",
+      }
+    );
+
+    console.log(simpleSmartAccountClient);
+
+    const smartAccountClient = createSmartAccountClient({
+      account: simpleSmartAccountClient,
+      chain: gnosisChiado, // or whatever chain you are using
+      bundlerTransport: http(import.meta.env.VITE_BUNDLER_URL),
+      entryPoint: ENTRYPOINT_ADDRESS_V06,
+      middleware: {
+        sponsorUserOperation: paymasterClient.sponsorUserOperation,
+      },
+    });
     const userSideContract = new ethers.Contract(
       import.meta.env.VITE_USERSIDE_ADDRESS,
       usersideabi,
       signer
     );
+
+    const data = await userSideContract.interface.encodeFunctionData(
+      "createProposal",
+      [
+        proposalType,
+        title + "|" + description,
+        votingthreshold,
+        daoInfo.daoId,
+        tokenAddress,
+        signer._address,
+        startDate,
+        endTime,
+        passingThreshold,
+      ]
+    );
+
+    const txHash = await smartAccountClient.sendTransaction({
+      to: import.meta.env.VITE_USERSIDE_ADDRESS,
+      data: data,
+      value: 0,
+      maxFeePerGas: 12710000001,
+      maxPriorityFeePerGas: 12709999993,
+    });
+
+    console.log("Proposal created with txHash: ", txHash);
+
+    if (txHash !== undefined) {
+      toast({
+        title: "Proposal Created",
+        description: "Your proposal has been created",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
 
     console.log(title);
     console.log(description);
@@ -417,28 +499,6 @@ const IndividualDAO = () => {
     console.log(endTime);
     console.log(passingThreshold);
     console.log(daoInfo);
-
-    const tx = await userSideContract.createProposal(
-      proposalType,
-      title + "|" + description,
-      votingthreshold,
-      daoInfo.daoId,
-      tokenAddress,
-      signer._address,
-      startDate,
-      endTime,
-      passingThreshold
-    );
-
-    await tx.wait();
-
-    toast({
-      title: "Proposal Created",
-      description: "Your proposal has been created",
-      status: "success",
-      duration: 5000,
-      isClosable: true,
-    });
   };
 
   const convertTimeToEpoch = async () => {
