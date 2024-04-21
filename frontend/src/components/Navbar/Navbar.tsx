@@ -11,6 +11,7 @@ import {
   Link,
 } from "@chakra-ui/react";
 import React from "react";
+import { Link as RouterLink } from "react-router-dom";
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import {
   DynamicWidget,
@@ -45,8 +46,8 @@ export default function Navbar() {
             fontWeight="0"
             color="brand.00"
           >
-            <Link href="/" mt={1}>
-              Scaling Ethereum 2024
+            <Link as={RouterLink} to="/">
+              ScalingEthereum
             </Link>
           </HStack>
           <Flex alignItems={"center"}>
@@ -59,7 +60,7 @@ export default function Navbar() {
                     display={{ base: "none", md: "flex" }}
                     marginRight={4}
                   >
-                    <Link href="/register">
+                    <Link as={RouterLink} to="/register">
                       <Button w="full" variant="ghost">
                         Register
                       </Button>
@@ -71,7 +72,7 @@ export default function Navbar() {
                     display={{ base: "none", md: "flex" }}
                     marginRight={4}
                   >
-                    <Link href="/create-dao">
+                    <Link as={RouterLink} to="/create-dao">
                       <Button w="full" variant="ghost">
                         Create DAO
                       </Button>
@@ -83,7 +84,7 @@ export default function Navbar() {
                     display={{ base: "none", md: "flex" }}
                     marginRight={4}
                   >
-                    <Link href="/explore">
+                    <Link as={RouterLink} to="/explore">
                       <Button w="full" variant="ghost">
                         Explore
                       </Button>
@@ -96,7 +97,7 @@ export default function Navbar() {
                     display={{ base: "none", md: "flex" }}
                     marginRight={4}
                   >
-                    <Link href="/profile">
+                    <Link as={RouterLink} to="/profile">
                       <Button w="full" variant="ghost">
                         Profile
                       </Button>
@@ -117,21 +118,21 @@ export default function Navbar() {
             {isAuthenticated && (
               <>
                 <Stack as={"nav"} spacing={4}>
-                  <Link href="/register">
+                  <Link as={RouterLink} to="/register">
                     <Button w="full" variant="ghost">
                       Register
                     </Button>
                   </Link>
                 </Stack>
                 <Stack as={"nav"} spacing={4}>
-                  <Link href="/create-dao">
+                  <Link as={RouterLink} to="/create-dao">
                     <Button w="full" variant="ghost">
                       Create DAO
                     </Button>
                   </Link>
                 </Stack>
                 <Stack as={"nav"} spacing={4}>
-                  <Link href="/explore">
+                  <Link as={RouterLink} to="/explore">
                     <Button w="full" variant="ghost">
                       Explore
                     </Button>
@@ -139,7 +140,7 @@ export default function Navbar() {
                 </Stack>
 
                 <Stack as={"nav"} spacing={4}>
-                  <Link href="/profile">
+                  <Link as={RouterLink} to="/profile">
                     <Button w="full" variant="ghost">
                       Profile
                     </Button>

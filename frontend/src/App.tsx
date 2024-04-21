@@ -47,8 +47,8 @@ function App() {
         overrides: { evmNetworks },
       }}
     >
-      <Navbar />
       <Router>
+        <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/create-dao" element={<CreateDAO />} />
