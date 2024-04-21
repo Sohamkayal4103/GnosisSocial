@@ -1,6 +1,17 @@
 // @ts-nocheck comment
 import React, { useState, useEffect } from "react";
 import {
+  createSmartAccountClient,
+  walletClientToSmartAccountSigner,
+  ENTRYPOINT_ADDRESS_V06,
+  getRequiredPrefund,
+} from "permissionless";
+import { gnosisChiado } from "@wagmi/core/chains";
+import { useWalletClient } from "wagmi";
+import { signerToSimpleSmartAccount } from "permissionless/accounts";
+import { Hex, createPublicClient, http } from "viem";
+import { createPimlicoPaymasterClient } from "permissionless/clients/pimlico";
+import {
   useDisclosure,
   Lorem,
   Modal,
@@ -106,6 +117,7 @@ const DaosCard = ({
   const { primaryWallet } = useDynamicContext();
   console.log("Inside DAO Card: " + totalDaoMember);
   const [submitting, setSubmitting] = useState(false);
+  const { data: walletClient } = useWalletClient();
 
   const joinDao = async () => {
     if (!primaryWallet?.connector) {
@@ -120,6 +132,40 @@ const DaosCard = ({
     } else {
       setSubmitting(true);
       const signer = await primaryWallet.connector.ethers?.getSigner();
+      const signer_pimlico = walletClientToSmartAccountSigner(walletClient);
+
+      const paymasterClient = createPimlicoPaymasterClient({
+        transport: http(import.meta.env.VITE_BUNDLER_URL),
+        entryPoint: ENTRYPOINT_ADDRESS_V06,
+      });
+
+      console.log(paymasterClient);
+
+      const publicClient = createPublicClient({
+        transport: http("https://rpc.chiadochain.net"),
+      });
+
+      const simpleSmartAccountClient = await signerToSimpleSmartAccount(
+        publicClient,
+        {
+          entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+          signer: signer_pimlico,
+          factoryAddress: "0x9406Cc6185a346906296840746125a0E44976454",
+        }
+      );
+
+      console.log(simpleSmartAccountClient);
+
+      const smartAccountClient = createSmartAccountClient({
+        account: simpleSmartAccountClient,
+        chain: gnosisChiado, // or whatever chain you are using
+        bundlerTransport: http(import.meta.env.VITE_BUNDLER_URL),
+        entryPoint: ENTRYPOINT_ADDRESS_V06,
+        middleware: {
+          sponsorUserOperation: paymasterClient.sponsorUserOperation,
+        },
+      });
+
       const contract = new ethers.Contract(
         import.meta.env.VITE_USERSIDE_ADDRESS,
         usersideabi,
@@ -140,20 +186,32 @@ const DaosCard = ({
         return;
       }
       try {
-        const tx = await contract.joinDao(daoId, signer._address);
-        console.log(tx);
-        await tx.wait();
-        setTxHash(tx.hash);
+        const data = await contract.interface.encodeFunctionData("joinDao", [
+          daoId,
+          signer._address,
+        ]);
 
-        toast({
-          title: "Congratulations!",
-          description: "You have successfully joined the DAO",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
+        const txHash = await smartAccountClient.sendTransaction({
+          to: import.meta.env.VITE_USERSIDE_ADDRESS,
+          data: data,
+          value: 0,
+          maxFeePerGas: 12710000001,
+          maxPriorityFeePerGas: 12709999993,
         });
-        const daoIdNum = Number(daoId);
-        navigate(`/dao/${daoIdNum}`);
+
+        if (txHash !== undefined) {
+          setTxHash(txHash);
+
+          toast({
+            title: "Congratulations!",
+            description: "You have successfully joined the DAO",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+          const daoIdNum = Number(daoId);
+          navigate(`/dao/${daoIdNum}`);
+        }
       } catch (e) {
         console.log(e.data === undefined);
 
