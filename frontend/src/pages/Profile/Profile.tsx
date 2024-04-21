@@ -86,11 +86,18 @@ const Profile = () => {
   console.log(userDaos);
 
   return (
-    <Box maxW="800px" mx="auto" p={4}>
+    <Box
+      // backgroundColor={"pink"}
+      p={4}
+      align="center"
+      justify="center"
+      textAlign="center"
+      mx="300px"
+    >
       <Stack align="center">
         <Avatar size="xl" name={userInfo[1]} src={userInfo[4]} />
 
-        <Heading my={2}>{userInfo[1]}</Heading>
+        <Heading my={2}>{userInfo[1]}🚀</Heading>
         <Text color="gray.500">{userInfo[2]}</Text>
         <Badge colorScheme="green">Online</Badge>
       </Stack>
@@ -101,15 +108,20 @@ const Profile = () => {
       </Box>
 
       <Box mt={4}>
-        {userDaos?.length !== 0 && <Heading size="md">My DAO's</Heading>}
-        <SimpleGrid columns={1} spacing={4} mt={2}>
+        {userDaos?.length !== 0 && (
+          <Heading size="md" marginBottom="20px">
+            My DAO's
+          </Heading>
+        )}
+
+        <SimpleGrid columns={2} spacing={4} mt={2} justifyContent="center">
           {userDaos?.length === 0 ? (
             <Flex
               direction="column"
               align="center"
               justify="center"
               h="200px"
-              w="500px"
+              w="1000px"
               bg="teal.800"
               borderWidth="1px"
               borderRadius="lg"
@@ -132,6 +144,9 @@ const Profile = () => {
                 borderWidth="1px"
                 borderRadius="lg"
                 position="relative"
+                boxShadow="md"
+                width="100%"
+                maxWidth="400px"
               >
                 <Heading size="sm">{dao.daoInfo.daoName}</Heading>
                 <Text mt={2}>{dao.daoInfo.daoDescription}</Text>
