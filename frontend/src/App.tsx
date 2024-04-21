@@ -10,6 +10,7 @@ import InviteCode from "./pages/InviteCode/InviteCode";
 import Profile from "./pages/Profile/Profile";
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import Navbar from "./components/Navbar/Navbar";
+import Footer from "./components/Footer/Footer";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 
 import "./App.css";
@@ -47,19 +48,28 @@ function App() {
         overrides: { evmNetworks },
       }}
     >
-      <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/create-dao" element={<CreateDAO />} />
-          <Route path="/register" element={<RegisterUser />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/dao/:daoId" element={<IndividualDAO />} />
-          <Route path="/dao/admin/:id" element={<DAOAdmin />} />
-          <Route path="/invitecode" element={<InviteCode />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </Router>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/create-dao" element={<CreateDAO />} />
+            <Route path="/register" element={<RegisterUser />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/dao/:daoId" element={<IndividualDAO />} />
+            <Route path="/dao/admin/:id" element={<DAOAdmin />} />
+            <Route path="/invitecode" element={<InviteCode />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+          <Footer />
+        </Router>
+      </div>
     </DynamicContextProvider>
   );
 }
