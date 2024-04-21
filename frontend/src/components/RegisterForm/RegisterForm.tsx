@@ -1,5 +1,9 @@
 // @ts-nocheck comment
 import React, { useState, useRef } from "react";
+import { useWalletClient } from "wagmi";
+import { signerToSimpleSmartAccount } from "permissionless/accounts";
+import { Hex, createPublicClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 
 import {
   Progress,
@@ -31,11 +35,21 @@ import {
   Stack,
   ring,
 } from "@chakra-ui/react";
-
+import {
+  createSmartAccountClient,
+  walletClientToSmartAccountSigner,
+  ENTRYPOINT_ADDRESS_V06,
+  getRequiredPrefund,
+} from "permissionless";
+import { gnosisChiado } from "@wagmi/core/chains";
 import { useToast } from "@chakra-ui/react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { ethers } from "ethers";
 import usersideabi from "../../../utils/abis/usersideabi.json";
+import {
+  createPimlicoBundlerClient,
+  createPimlicoPaymasterClient,
+} from "permissionless/clients/pimlico";
 
 const RegisterForm = () => {
   const toast = useToast();
@@ -46,6 +60,8 @@ const RegisterForm = () => {
   const [ipfsUrl, setIpfsUrl] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const { primaryWallet } = useDynamicContext();
+
+  const { data: walletClient } = useWalletClient();
 
   const changeHandler = () => {
     setProfileImage(inputRef.current?.files[0]);
@@ -90,32 +106,92 @@ const RegisterForm = () => {
   };
 
   const handleSubmit = async () => {
-    const signer = await primaryWallet.connector.ethers?.getSigner();
+    const signer1 = await primaryWallet.connector.ethers?.getSigner();
+
+    const signer = walletClientToSmartAccountSigner(walletClient);
+
+    console.log(signer);
+
+    const paymasterClient = createPimlicoPaymasterClient({
+      transport: http(import.meta.env.VITE_BUNDLER_URL),
+      entryPoint: ENTRYPOINT_ADDRESS_V06,
+    });
+
+    console.log(paymasterClient);
+
+    const publicClient = createPublicClient({
+      transport: http("https://rpc.chiadochain.net"),
+    });
+
+    const simpleSmartAccountClient = await signerToSimpleSmartAccount(
+      publicClient,
+      {
+        entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+        signer: signer,
+        factoryAddress: "0x9406Cc6185a346906296840746125a0E44976454",
+      }
+    );
+
+    console.log(simpleSmartAccountClient);
+
+    const smartAccountClient = createSmartAccountClient({
+      account: simpleSmartAccountClient,
+      chain: gnosisChiado, // or whatever chain you are using
+      bundlerTransport: http(import.meta.env.VITE_BUNDLER_URL),
+      entryPoint: ENTRYPOINT_ADDRESS_V06,
+      middleware: {
+        sponsorUserOperation: paymasterClient.sponsorUserOperation,
+      },
+    });
+
+    console.log(smartAccountClient);
 
     const userSideInstance = new ethers.Contract(
       import.meta.env.VITE_USERSIDE_ADDRESS,
       usersideabi,
-      signer
+      signer1
     );
 
-    const tx = await userSideInstance.createUser(
+    const data1 = userSideInstance.interface.encodeFunctionData("createUser", [
       name,
       email,
       bio,
-      profileImage,
-      signer._address
-    );
+      ipfsUrl,
+      signer1._address,
+    ]);
 
-    await tx.wait();
+    console.log(data1);
 
-    toast({
-      title: "User Created",
-      description: "User Created Successfully",
-      status: "success",
-      duration: 1000,
-      isClosable: true,
-      position: "top-right",
+    const txHash = await smartAccountClient.sendTransaction({
+      to: import.meta.env.VITE_USERSIDE_ADDRESS,
+
+      data: data1,
+      value: 0,
+      maxFeePerGas: 12710000001,
+      maxPriorityFeePerGas: 12709999993,
     });
+
+    console.log("transaction hash is " + txHash);
+
+    if (txHash) {
+      toast({
+        title: "User Created",
+        description: "User Created Successfully",
+        status: "success",
+        duration: 1000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+
+    // toast({
+    //   title: "User Created",
+    //   description: "User Created Successfully",
+    //   status: "success",
+    //   duration: 1000,
+    //   isClosable: true,
+    //   position: "top-right",
+    // });
   };
 
   const getUser = async () => {
