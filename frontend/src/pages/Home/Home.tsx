@@ -94,7 +94,7 @@ export default function Home() {
             <Image
               alt={"Login Image"}
               objectFit={"cover"}
-              srcSet="../../../public/assets/DAOLanding.svg"
+              src={"../../../public/assets/DAOLanding.svg"}
               width={450}
               height={450}
             />
