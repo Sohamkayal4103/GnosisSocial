@@ -30,55 +30,29 @@ const config: HardhatUserConfig = {
         ]
     },
     networks: {
-        mumbai: {
-            url: 'https://rpc.ankr.com/polygon_mumbai',
-            chainId: 80001,
+        chiado: {
+            chainId: 10200,
+            url: "https://rpc.chiadochain.net",
             loggingEnabled: true,
             accounts: [process.env.PRIVATE_KEY!],
             saveDeployments: true,
             zksync: false
         },
-        polygon: {
-            url: 'https://polygon-rpc.com',
-            chainId: 137,
+        avail: {
+            chainId: 202402021700,
+            url: "https://op-avail-sepolia.alt.technology",
+            loggingEnabled: true,
             accounts: [process.env.PRIVATE_KEY!],
             saveDeployments: true,
             zksync: false
         },
-        zetachainTestnet: {
-            chainId: 7001,
-            url: 'https://zetachain-athens-evm.blockpi.network/v1/rpc/public',
+        arbitrum: {
+            chainId: 421614,
+            url: "https://sepolia-rollup.arbitrum.io/rpc",
+            loggingEnabled: true,
             accounts: [process.env.PRIVATE_KEY!],
             saveDeployments: true,
-            zksync: false
-        },
-        zetachain: {
-            chainId: 7000,
-            url: 'https://zetachain-evm.blockpi.network/v1/rpc/public',
-            accounts: [process.env.PRIVATE_KEY!],
-            saveDeployments: true,
-            zksync: false
-        },
-        opBnbTestnet: {
-            chainId: 5611,
-            url: 'https://opbnb-testnet-rpc.bnbchain.org',
-            accounts: [process.env.PRIVATE_KEY!],
-            saveDeployments: true,
-            zksync: false
-        },
-        opBnb: {
-            chainId: 204,
-            url: 'https://opbnb-mainnet-rpc.bnbchain.org',
-            accounts: [process.env.PRIVATE_KEY!],
-            saveDeployments: true,
-            zksync: false
-        },
-        ethereum: {
-            chainId: 1,
-            url: process.env.ALCHEMY_ETH_RPC!,
-            accounts: [process.env.PRIVATE_KEY!],
-            saveDeployments: true,
-            zksync: false
+            zksync: false  
         }
     },
     etherscan: {
@@ -91,7 +65,8 @@ const config: HardhatUserConfig = {
             sepolia: process.env.ETHERSCAN_KEY!,
             mainnet: process.env.ETHERSCAN_KEY!,
             zetachainTestnet: process.env.ZETASCAN_API_KEY!,
-            zetachain: process.env.ZETASCAN_API_KEY!
+            zetachain: process.env.ZETASCAN_API_KEY!,
+            avail: "abc",
         },
         customChains: [
             {
@@ -109,7 +84,15 @@ const config: HardhatUserConfig = {
                     apiURL: 'https://zetachain.blockscout.com/api',
                     browserURL: 'https://zetachain.blockscout.com/'
                 }
-            }
+            },
+            {
+                network: "avail",
+                chainId: 202402021700,
+                urls: {
+                  apiURL: "https://op-avail-sepolia-explorer.alt.technology/api",
+                  browserURL: "https://op-avail-sepolia-explorer.alt.technology/"
+                }
+              },
         ]
     },
     docgen: {
