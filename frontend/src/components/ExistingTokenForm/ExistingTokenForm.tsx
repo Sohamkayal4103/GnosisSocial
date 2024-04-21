@@ -1,6 +1,21 @@
 // @ts-nocheck comment
 import { useState, useRef, useContext } from "react";
 import { ethers } from "ethers";
+import {
+  createSmartAccountClient,
+  walletClientToSmartAccountSigner,
+  ENTRYPOINT_ADDRESS_V06,
+  getRequiredPrefund,
+} from "permissionless";
+import { gnosisChiado } from "@wagmi/core/chains";
+import { useWalletClient } from "wagmi";
+import { signerToSimpleSmartAccount } from "permissionless/accounts";
+import { Hex, createPublicClient, http } from "viem";
+
+import {
+  createPimlicoBundlerClient,
+  createPimlicoPaymasterClient,
+} from "permissionless/clients/pimlico";
 import userSideabi from "../../../utils/abis/usersideabi.json";
 import daonftabi from "../../../utils/abis/daonftabi.json";
 import {
@@ -312,6 +327,7 @@ export default function ExistingTokenForm() {
   const [submitting, setSubmitting] = useState(false);
   const { primaryWallet } = useDynamicContext();
   const navigate = useNavigate();
+  const { data: walletClient } = useWalletClient();
 
   const mintDAONFT = async () => {
     if (!primaryWallet?.connector) {
@@ -325,13 +341,62 @@ export default function ExistingTokenForm() {
       });
     } else {
       const signer = await primaryWallet.connector.ethers?.getSigner();
+
+      const signer_pimlico = walletClientToSmartAccountSigner(walletClient);
+
+      const paymasterClient = createPimlicoPaymasterClient({
+        transport: http(import.meta.env.VITE_BUNDLER_URL),
+        entryPoint: ENTRYPOINT_ADDRESS_V06,
+      });
+
+      console.log(paymasterClient);
+
+      const publicClient = createPublicClient({
+        transport: http("https://rpc.chiadochain.net"),
+      });
+
+      const simpleSmartAccountClient = await signerToSimpleSmartAccount(
+        publicClient,
+        {
+          entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+          signer: signer_pimlico,
+          factoryAddress: "0x9406Cc6185a346906296840746125a0E44976454",
+        }
+      );
+
+      console.log(simpleSmartAccountClient);
+
+      const smartAccountClient = createSmartAccountClient({
+        account: simpleSmartAccountClient,
+        chain: gnosisChiado, // or whatever chain you are using
+        bundlerTransport: http(import.meta.env.VITE_BUNDLER_URL),
+        entryPoint: ENTRYPOINT_ADDRESS_V06,
+        middleware: {
+          sponsorUserOperation: paymasterClient.sponsorUserOperation,
+        },
+      });
+
       const contract = new ethers.Contract(
         import.meta.env.VITE_DAONFT_ADDRESS,
         daonftabi,
         signer
       );
-      const tx = await contract.mintProperty(name, desc, signer._address);
-      await tx.wait();
+
+      const data = await contract.interface.encodeFunctionData("mintProperty", [
+        name,
+        desc,
+        signer._address,
+      ]);
+
+      const txHash = await smartAccountClient.sendTransaction({
+        to: import.meta.env.VITE_DAONFT_ADDRESS,
+        data: data,
+        value: 0,
+        maxFeePerGas: 12710000001,
+        maxPriorityFeePerGas: 12709999993,
+      });
+
+      console.log("NFT minted" + txHash);
     }
   };
 
@@ -347,35 +412,87 @@ export default function ExistingTokenForm() {
       });
     } else {
       const signer = await primaryWallet.connector.ethers?.getSigner();
-      const contract = new ethers.Contract(
+
+      const signer_pimlico = walletClientToSmartAccountSigner(walletClient);
+
+      const paymasterClient = createPimlicoPaymasterClient({
+        transport: http(import.meta.env.VITE_BUNDLER_URL),
+        entryPoint: ENTRYPOINT_ADDRESS_V06,
+      });
+
+      console.log(paymasterClient);
+
+      const publicClient = createPublicClient({
+        transport: http("https://rpc.chiadochain.net"),
+      });
+
+      const simpleSmartAccountClient = await signerToSimpleSmartAccount(
+        publicClient,
+        {
+          entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+          signer: signer_pimlico,
+          factoryAddress: "0x9406Cc6185a346906296840746125a0E44976454",
+        }
+      );
+
+      console.log(simpleSmartAccountClient);
+
+      const smartAccountClient = createSmartAccountClient({
+        account: simpleSmartAccountClient,
+        chain: gnosisChiado, // or whatever chain you are using
+        bundlerTransport: http(import.meta.env.VITE_BUNDLER_URL),
+        entryPoint: ENTRYPOINT_ADDRESS_V06,
+        middleware: {
+          sponsorUserOperation: paymasterClient.sponsorUserOperation,
+        },
+      });
+
+      const userSideContract = new ethers.Contract(
         import.meta.env.VITE_USERSIDE_ADDRESS,
         userSideabi,
         signer
       );
       setSubmitting(true);
-      const tx = await contract.createDao(
-        name,
-        desc,
-        threshholdToken,
-        proposalToken,
-        tokenAddress,
-        daovisibility,
-        signer._address
+
+      const data = await userSideContract.interface.encodeFunctionData(
+        "createDao",
+        [
+          name,
+          desc,
+          threshholdToken,
+          proposalToken,
+          tokenAddress,
+          daovisibility,
+          signer._address,
+        ]
       );
-      await tx.wait();
-      await mintDAONFT();
-      setSubmitting(false);
-      toast({
-        title: "DAO Created",
-        description: "DAO Created Successfully",
-        status: "success",
-        duration: 1000,
-        isClosable: true,
-        position: "top-right",
+
+      const txHash = await smartAccountClient.sendTransaction({
+        to: import.meta.env.VITE_USERSIDE_ADDRESS,
+        data: data,
+        value: 0,
+        maxFeePerGas: 12710000001,
+        maxPriorityFeePerGas: 12709999993,
       });
-      setTimeout(() => {
-        navigate("/explore");
-      }, [2000]);
+
+      console.log("DAO Created" + txHash);
+
+      await mintDAONFT();
+
+      if (txHash !== undefined) {
+        setSubmitting(false);
+        toast({
+          title: "DAO Created",
+          description: "DAO Created Successfully",
+          status: "success",
+          duration: 1000,
+          isClosable: true,
+          position: "top-right",
+        });
+        setTimeout(() => {
+          navigate("/explore");
+        }, [2000]);
+      }
     }
   };
 
