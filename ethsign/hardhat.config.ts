@@ -66,7 +66,9 @@ const config: HardhatUserConfig = {
             mainnet: process.env.ETHERSCAN_KEY!,
             zetachainTestnet: process.env.ZETASCAN_API_KEY!,
             zetachain: process.env.ZETASCAN_API_KEY!,
-            avail: "abc",
+            avail: process.env.AVAIL_API_KEY,
+            arbitrumSepolia:process.env.ARBITRUM_API_KEY,
+            chiado: process.env.CHIADO_API_KEY,
         },
         customChains: [
             {
