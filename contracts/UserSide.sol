@@ -79,7 +79,7 @@ contract UserSide{
 
     mapping(uint256 => Document) public documentIdtoDocument;
     mapping(uint256 => uint256[]) public daoIdtoDocuments;
-    
+    mapping(uint256 => address) public tokenBoundAddress;
 
     function createUser(
         string memory _userName,
@@ -324,6 +324,10 @@ contract UserSide{
             quadraticNoMappings[_proposalId][tempUserId] += weight;
         }
         proposalIdtoVoters[_proposalId].push(tempUserId);
+    }
+
+    function updateTokenBoundMapping(uint256 _daoId,address accAddress) public {
+        tokenBoundAddress[_daoId] = accAddress;
     }
 
     function getAllDaoMembers(uint256 _daoId) public view returns (uint256[] memory) {
