@@ -23,7 +23,7 @@
 2. Clone the repo.
    
 ```
-https://github.com/MukulKolpe/scaling-ethereum-24
+https://github.com/SohamKayal4103/scaling-ethereum-24
 ```
 3. Open in VS code or your preferred code editor.
 ```
